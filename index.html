@@ -1,0 +1,1969 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>SOMI - Premium 3D Music Library & Player</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Anton&family=Dancing+Script:wght@700&family=Diplomata&family=Great+Vibes&family=Monoton&family=Old+Standard+TT:wght@700&family=Oswald:wght@700&family=Pacifico&family=Parisienne&family=Playfair+Display:wght@700&family=Press+Start+2P&family=VT323&display=swap"
+      rel="stylesheet"
+    />
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <style>
+      /* ========================================================= */
+      /* --- GLOBAL & FONTS --- */
+      /* ========================================================= */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        background-color: #030303;
+        background-image:
+          radial-gradient(circle at 20% 40%, #151515 0%, transparent 40%),
+          radial-gradient(circle at 80% 60%, #111 0%, transparent 40%);
+        overflow: hidden;
+        height: 100vh;
+        width: 100vw;
+        color: #fff;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        touch-action: none;
+      }
+
+      .font-classic-serif {
+        font-family: "Playfair Display", serif;
+        color: #ff3b30;
+      }
+      .font-clean-script {
+        font-family: "Great Vibes", cursive;
+        color: #fff;
+      }
+      .font-flowing-script {
+        font-family: "Parisienne", cursive;
+        color: #5ac8fa;
+      }
+      .font-bold-retro {
+        font-family: "Oswald", sans-serif;
+        color: #ff3b30;
+      }
+      .font-bold-modern {
+        font-family: "Anton", sans-serif;
+        color: #ff9500;
+      }
+      .font-quirky-decorative {
+        font-family: "Monoton", cursive;
+        color: #5e5ce6;
+      }
+
+      img {
+        -webkit-user-drag: none;
+        user-drag: none;
+        pointer-events: none;
+      }
+
+      /* ========================================================= */
+      /* --- CODE 1: INTRO & COVERFLOW UI --- */
+      /* ========================================================= */
+      #intro-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: #030303;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+        overflow: hidden;
+      }
+      .intro-img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 180px;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 8px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+        transition:
+          transform 1.2s cubic-bezier(0.25, 1, 0.5, 1),
+          opacity 1s ease;
+      }
+      .intro-text {
+        position: absolute;
+        color: #fff;
+        font-family: Impact, "Arial Black", sans-serif;
+        font-weight: 900;
+        font-size: 16vw;
+        letter-spacing: -0.05em;
+        text-transform: uppercase;
+        line-height: 1;
+        opacity: 0;
+        transform: scale(0.85);
+        transition: all 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+        z-index: 10;
+        text-shadow: 0 0 40px rgba(255, 255, 255, 0.15);
+      }
+
+      @media (min-width: 769px) {
+        #intro-overlay:not(.state-split):not(.state-exit) #i-img-1 {
+          transform: translate(calc(-50% - 33vw), -50%);
+        }
+        #intro-overlay:not(.state-split):not(.state-exit) #i-img-2 {
+          transform: translate(calc(-50% - 11vw), -50%);
+        }
+        #intro-overlay:not(.state-split):not(.state-exit) #i-img-3 {
+          transform: translate(calc(-50% + 11vw), -50%);
+        }
+        #intro-overlay:not(.state-split):not(.state-exit) #i-img-4 {
+          transform: translate(calc(-50% + 33vw), -50%);
+        }
+        #intro-overlay.state-split #i-img-1,
+        #intro-overlay.state-text #i-img-1 {
+          transform: translate(calc(-50% - 24vw), calc(-50% - 18vh)) scale(0.7);
+          opacity: 0.8;
+        }
+        #intro-overlay.state-split #i-img-2,
+        #intro-overlay.state-text #i-img-2 {
+          transform: translate(calc(-50% + 24vw), calc(-50% - 18vh)) scale(0.7);
+          opacity: 0.8;
+        }
+        #intro-overlay.state-split #i-img-3,
+        #intro-overlay.state-text #i-img-3 {
+          transform: translate(calc(-50% - 24vw), calc(-50% + 18vh)) scale(0.7);
+          opacity: 0.8;
+        }
+        #intro-overlay.state-split #i-img-4,
+        #intro-overlay.state-text #i-img-4 {
+          transform: translate(calc(-50% + 24vw), calc(-50% + 18vh)) scale(0.7);
+          opacity: 0.8;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .intro-img {
+          width: 145px;
+          height: 145px;
+        }
+        .intro-text {
+          font-size: 32vw;
+        }
+        #intro-overlay:not(.state-split):not(.state-exit) #i-img-1 {
+          transform: translate(-50%, calc(-50% - 28vh));
+        }
+        #intro-overlay:not(.state-split):not(.state-exit) #i-img-2 {
+          transform: translate(-50%, calc(-50% - 9vh));
+        }
+        #intro-overlay:not(.state-split):not(.state-exit) #i-img-3 {
+          transform: translate(-50%, calc(-50% + 9vh));
+        }
+        #intro-overlay:not(.state-split):not(.state-exit) #i-img-4 {
+          transform: translate(-50%, calc(-50% + 28vh));
+        }
+        #intro-overlay.state-split #i-img-1,
+        #intro-overlay.state-text #i-img-1 {
+          transform: translate(calc(-50% - 37vw), calc(-50% - 15vh)) scale(0.75);
+          opacity: 0.8;
+        }
+        #intro-overlay.state-split #i-img-2,
+        #intro-overlay.state-text #i-img-2 {
+          transform: translate(calc(-50% + 37vw), calc(-50% - 15vh)) scale(0.75);
+          opacity: 0.8;
+        }
+        #intro-overlay.state-split #i-img-3,
+        #intro-overlay.state-text #i-img-3 {
+          transform: translate(calc(-50% - 37vw), calc(-50% + 15vh)) scale(0.75);
+          opacity: 0.8;
+        }
+        #intro-overlay.state-split #i-img-4,
+        #intro-overlay.state-text #i-img-4 {
+          transform: translate(calc(-50% + 37vw), calc(-50% + 15vh)) scale(0.75);
+          opacity: 0.8;
+        }
+      }
+
+      #intro-overlay.state-text .intro-text {
+        opacity: 1;
+        transform: scale(1);
+      }
+      #intro-overlay.state-exit {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #intro-overlay.state-exit .intro-text {
+        opacity: 0;
+        transform: scale(1.15);
+      }
+      #intro-overlay.state-exit #i-img-1 {
+        transform: translate(calc(-50% - 60vw), calc(-50% - 60vh)) scale(0.5);
+        opacity: 0;
+      }
+      #intro-overlay.state-exit #i-img-2 {
+        transform: translate(calc(-50% + 60vw), calc(-50% - 60vh)) scale(0.5);
+        opacity: 0;
+      }
+      #intro-overlay.state-exit #i-img-3 {
+        transform: translate(calc(-50% - 60vw), calc(-50% + 60vh)) scale(0.5);
+        opacity: 0;
+      }
+      #intro-overlay.state-exit #i-img-4 {
+        transform: translate(calc(-50% + 60vw), calc(-50% + 60vh)) scale(0.5);
+        opacity: 0;
+      }
+
+      /* Gallery Wrapper */
+      :root {
+        --sz: 320px;
+        --th: 6px;
+        --hlf-th: 3px;
+        --hlf-sz: 160px;
+      }
+      .coverflow-wrapper {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        cursor: grab;
+        perspective: 1500px;
+        transform-style: preserve-3d;
+        opacity: 0;
+        transition: opacity 1s ease 1s;
+        z-index: 100;
+      }
+      .coverflow-wrapper.site-ready {
+        opacity: 1;
+      }
+      .coverflow-wrapper.fade-out {
+        opacity: 0 !important;
+        pointer-events: none;
+        transition: opacity 0.6s ease;
+      }
+
+      #rackTrack {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transform-style: preserve-3d;
+      }
+      .flow-item {
+        position: absolute;
+        width: var(--sz);
+        height: var(--sz);
+        left: 50%;
+        top: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+      }
+      .flow-cover-wrapper {
+        width: var(--sz);
+        height: var(--sz);
+        perspective: 1200px;
+        transform-style: preserve-3d;
+      }
+      .flow-cover {
+        width: 100%;
+        height: 100%;
+        transform-style: preserve-3d;
+        transition:
+          box-shadow 0.3s,
+          transform 0.1s;
+      }
+      .face {
+        position: absolute;
+        display: block;
+        backface-visibility: hidden;
+        background: #0a0a0a;
+      }
+      .face img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .cover-front,
+      .cover-back {
+        width: var(--sz);
+        height: var(--sz);
+        left: 0;
+        top: 0;
+      }
+      .cover-front {
+        transform: translateZ(var(--hlf-th));
+        box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+      }
+      .cover-back {
+        transform: rotateY(180deg) translateZ(var(--hlf-th));
+      }
+      .cover-spine-left,
+      .cover-spine-right {
+        width: var(--th);
+        height: var(--sz);
+        left: 50%;
+        top: 0;
+        margin-left: calc(var(--th) / -2);
+      }
+      .cover-spine-left {
+        transform: rotateY(-90deg) translateZ(var(--hlf-sz));
+        background: #111;
+      }
+      .cover-spine-right {
+        transform: rotateY(90deg) translateZ(var(--hlf-sz));
+        background: #1a1a1a;
+      }
+      .cover-spine-top,
+      .cover-spine-bottom {
+        width: var(--sz);
+        height: var(--th);
+        left: 0;
+        top: 50%;
+        margin-top: calc(var(--th) / -2);
+      }
+      .cover-spine-top {
+        transform: rotateX(90deg) translateZ(var(--hlf-sz));
+      }
+      .cover-spine-bottom {
+        transform: rotateX(-90deg) translateZ(var(--hlf-sz));
+      }
+      .glass-shine {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        pointer-events: none;
+        background: linear-gradient(
+          115deg,
+          rgba(255, 255, 255, 0.6) 0%,
+          rgba(255, 255, 255, 0.05) 25%,
+          transparent 40%,
+          transparent 60%,
+          rgba(255, 255, 255, 0.2) 100%
+        );
+        transform: translateZ(1px);
+      }
+      .spine-label {
+        position: absolute;
+        white-space: nowrap;
+        transform: rotate(-90deg) translateZ(1px);
+        font-size: 0.65rem;
+        letter-spacing: 1px;
+        width: var(--sz);
+        text-align: center;
+        top: calc(var(--hlf-sz) - 3px);
+        left: calc(var(--hlf-sz) * -1);
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+        z-index: 5;
+      }
+      .edge-img {
+        filter: brightness(0.6);
+      }
+
+      .desktop-only {
+        display: block;
+      }
+      .mobile-only {
+        display: none;
+      }
+
+      @media (min-width: 769px) {
+        .flow-item:hover .flow-cover {
+          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9);
+        }
+      }
+
+      @media (max-width: 768px) {
+        :root {
+          --sz: 220px;
+          --th: 28px;
+          --hlf-th: 14px;
+          --hlf-sz: 110px;
+        }
+        .coverflow-wrapper {
+          overflow-y: auto;
+          overflow-x: hidden;
+          padding: 80px 20px 120px 20px;
+          touch-action: pan-y;
+          perspective: none;
+        }
+        #rackTrack {
+          display: flex;
+          flex-direction: column;
+          gap: 60px;
+          align-items: flex-start;
+          transform-style: flat;
+        }
+        .flow-item {
+          position: relative !important;
+          left: 0 !important;
+          top: 0 !important;
+          transform: none !important;
+          width: 100%;
+          height: 120px;
+          display: flex;
+          justify-content: flex-start;
+        }
+        .flow-cover {
+          transform: rotateX(72deg) rotateY(0deg) rotateZ(0deg) !important;
+          transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .flow-item:active .flow-cover {
+          transform: rotateX(68deg) translateY(5px) !important;
+        }
+        .cover-back {
+          box-shadow: 0 0 35px 10px rgba(0, 0, 0, 0.8);
+          background: #050505;
+        }
+        .cover-back img {
+          opacity: 0.2;
+        }
+        .desktop-only {
+          display: none !important;
+        }
+        .mobile-only {
+          display: flex !important;
+        }
+        .mobile-spine {
+          width: 100%;
+          height: 100%;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 10px;
+          box-shadow:
+            inset 0 1px 3px rgba(255, 255, 255, 0.4),
+            inset 0 -1px 3px rgba(0, 0, 0, 0.5);
+          position: relative;
+          overflow: hidden;
+          border-radius: 1px;
+        }
+        .spine-lines {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+        }
+        .spine-text-mobile {
+          position: relative;
+          z-index: 2;
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: -0.5px;
+          text-transform: uppercase;
+          transform: scaleY(1.2);
+          white-space: nowrap;
+        }
+        .mobile-info {
+          margin-left: 25px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          transform: translateY(-8px);
+        }
+        .album-title-mob {
+          font-size: 14px;
+          font-weight: 700;
+          margin-bottom: 2px;
+        }
+        .album-artist-mob {
+          font-size: 11px;
+          color: #888;
+          margin-bottom: 8px;
+        }
+        .play-icon-mob {
+          font-size: 10px;
+          color: #fff;
+        }
+        .scene-3d {
+          transform: scale(0.55);
+        }
+      }
+
+      /* 3D MODAL STYLES */
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        background-color: rgba(10, 10, 12, 0.4);
+        backdrop-filter: blur(40px) saturate(180%);
+        -webkit-backdrop-filter: blur(40px) saturate(180%);
+        box-shadow:
+          inset 0 0 100px rgba(0, 0, 0, 0.8),
+          inset 0 2px 20px rgba(255, 255, 255, 0.05);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s ease;
+      }
+      .modal.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .scene-3d {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        perspective: 2000px;
+        cursor: grab;
+      }
+      .scene-3d:active {
+        cursor: grabbing;
+      }
+      .case-rotator {
+        width: 500px;
+        height: 500px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transform-style: preserve-3d;
+        transform: rotateX(15deg) rotateY(-20deg);
+      }
+      .vinyl-case {
+        position: relative;
+        width: 400px;
+        height: 400px;
+        transform-style: preserve-3d;
+        cursor: pointer;
+      }
+      .sleeve {
+        position: absolute;
+        inset: 0;
+        transform-style: preserve-3d;
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.8);
+        transition: opacity 0.5s ease;
+      }
+      .sleeve-front,
+      .sleeve-back {
+        width: 400px;
+        height: 400px;
+        left: 0;
+        top: 0;
+        position: absolute;
+        background: #0a0a0a;
+        backface-visibility: hidden;
+      }
+      .sleeve-front {
+        transform: translateZ(4px);
+      }
+      .sleeve-back {
+        transform: rotateY(180deg) translateZ(4px);
+      }
+      .sleeve-spine-left {
+        position: absolute;
+        width: 8px;
+        height: 400px;
+        left: 196px;
+        top: 0;
+        transform: rotateY(-90deg) translateZ(200px);
+      }
+      .sleeve-spine-top {
+        position: absolute;
+        width: 400px;
+        height: 8px;
+        left: 0;
+        top: 196px;
+        transform: rotateX(90deg) translateZ(200px);
+      }
+      .sleeve-spine-bottom {
+        position: absolute;
+        width: 400px;
+        height: 8px;
+        left: 0;
+        top: 196px;
+        transform: rotateX(-90deg) translateZ(200px);
+      }
+      .vinyl-record {
+        position: absolute;
+        width: 380px;
+        height: 380px;
+        left: 10px;
+        top: 10px;
+        border-radius: 50%;
+        background: #050505;
+        background-image: repeating-radial-gradient(
+          #111 0px,
+          #0a0a0a 2px,
+          #1a1a1a 4px,
+          #050505 6px
+        );
+        box-shadow:
+          inset 0 0 15px #000,
+          0 5px 15px rgba(0, 0, 0, 0.9);
+        transform-style: preserve-3d;
+        transform: translateZ(0px);
+        transition:
+          transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+          opacity 0.5s ease;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .vinyl-label {
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        background-color: #fff;
+        background-size: cover;
+        background-position: center;
+        border: 2px solid #222;
+      }
+      .vinyl-hole {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: #000;
+        border-radius: 50%;
+        border: 1px solid #333;
+      }
+      .vinyl-case.is-open .vinyl-record {
+        transform: translateX(180px) rotate(120deg) translateZ(0px);
+      }
+
+      /* Fly Transition Class */
+      .vinyl-case.fly-out .vinyl-record {
+        transform: translateX(0px) rotate(240deg) translateZ(400px) scale(2.5) !important;
+        opacity: 0;
+        transition:
+          transform 0.8s cubic-bezier(0.5, 0, 0.1, 1),
+          opacity 0.6s ease 0.2s;
+      }
+      .vinyl-case.fly-out .sleeve {
+        opacity: 0;
+      }
+
+      /* ========================================================= */
+      /* --- CODE 2: THREE.JS PLAYER UI --- */
+      /* ========================================================= */
+      #turntable-container {
+        position: fixed;
+        inset: 0;
+        z-index: 500;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 1s ease-in-out;
+        font-family: "VT323", monospace;
+      }
+      #turntable-container.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      #canvas-mount {
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+      }
+
+      /* NEW GLASSMORPHISM PILL HUD */
+      #hud {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(30, 30, 30, 0.55); /* Translucent mat finish */
+        backdrop-filter: blur(25px) saturate(180%); /* Apple glass texture */
+        -webkit-backdrop-filter: blur(25px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.15); /* Sleek white border */
+        border-radius: 28px;
+        display: flex;
+        align-items: center;
+        padding: 14px 28px 14px 14px;
+        gap: 24px;
+        z-index: 510;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.8s ease-in-out;
+        box-shadow:
+          0 15px 35px rgba(0, 0, 0, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        width: 90%;
+        max-width: 500px;
+      }
+      #hud.unlocked {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      #hud-cover {
+        width: 65px;
+        height: 65px;
+        border-radius: 12px;
+        object-fit: cover;
+        background: #fff;
+        flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+      }
+
+      .hud-controls-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        flex-grow: 1;
+      }
+      .hud-playback {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        margin-top: 4px;
+      }
+
+      .ctrl-icon {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+      }
+      .ctrl-icon svg {
+        width: 100%;
+        height: 100%;
+        fill: #fff;
+        transition: transform 0.1s;
+      }
+      .ctrl-icon:active svg {
+        transform: scale(0.85);
+      }
+
+      /* New Progress Slider UI */
+      .hud-progress-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 500;
+        letter-spacing: 0.5px;
+      }
+      .hud-progress-wrapper span {
+        min-width: 32px;
+        text-align: center;
+      }
+
+      #progress-slider {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+        position: relative;
+      }
+      #progress-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 12px;
+        height: 12px;
+        background: #fff;
+        border-radius: 50%;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+      }
+
+      /* Back Button Repositioned */
+      #btn-back {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 510;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 12px;
+        font-family: "VT323", monospace;
+        font-size: 18px;
+        cursor: pointer;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.8s ease-in-out;
+      }
+      #btn-back:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      #turntable-container.active #btn-back {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .grab-cursor {
+        cursor: grab !important;
+      }
+      .grabbing-cursor {
+        cursor: grabbing !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="intro-overlay">
+      <img src="1.png" class="intro-img" id="i-img-1" alt="Intro 1" />
+      <img src="2.png" class="intro-img" id="i-img-2" alt="Intro 2" />
+      <img src="3.png" class="intro-img" id="i-img-3" alt="Intro 3" />
+      <img src="4.png" class="intro-img" id="i-img-4" alt="Intro 4" />
+      <div class="intro-text">SOMI</div>
+    </div>
+
+    <div class="coverflow-wrapper" id="scrollWrapper">
+      <div id="rackTrack"></div>
+    </div>
+
+    <div class="modal" id="modal">
+      <div class="scene-3d" id="scene3D">
+        <div class="case-rotator" id="caseRotator">
+          <div class="vinyl-case" id="cdCase"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="turntable-container">
+      <div id="canvas-mount"></div>
+
+      <button id="btn-back">⏏ BACK</button>
+
+      <div id="hud">
+        <img id="hud-cover" src="" alt="Cover" />
+
+        <div class="hud-controls-wrapper">
+          <div class="hud-playback">
+            <button class="ctrl-icon" id="btn-prev">
+              <svg viewBox="0 0 24 24">
+                <path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z" />
+              </svg>
+            </button>
+            <button class="ctrl-icon" id="btn-play">
+              <svg id="icon-play" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              <svg id="icon-pause" viewBox="0 0 24 24" style="display: none">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+              </svg>
+            </button>
+            <button class="ctrl-icon" id="btn-next">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="hud-progress-wrapper">
+            <span id="time-current">0:00</span>
+            <input
+              type="range"
+              id="progress-slider"
+              min="0"
+              max="100"
+              value="0"
+            />
+            <span id="time-total">0:00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Global Tracks available to both parts
+      window.GLOBAL_TRACKS = [
+        {
+          artist: "A$AP Rocky",
+          trackName: "Fukk Sleep",
+          fontClass: "font-classic-serif",
+          img: "asap rocky_.jpg",
+          mCol: "#f4f4f4",
+          mTxt: "#000",
+          color1: "#cc44ff",
+          color2: "#ffffff",
+          lightHex1: 0xcc44ff,
+        },
+        {
+          artist: "B.I",
+          trackName: "Waterfall",
+          fontClass: "font-clean-script",
+          img: "B_I (@shxxbi131) _ Instagram.jpg",
+          mCol: "#ff3b30",
+          mTxt: "#fff",
+          color1: "#ff44cc",
+          color2: "#ffcc00",
+          lightHex1: 0xff44cc,
+        },
+        {
+          artist: "Frank Ocean",
+          trackName: "Pink + White",
+          fontClass: "font-flowing-script",
+          img: "blonde.jpg",
+          mCol: "#5e5ce6",
+          mTxt: "#fff",
+          color1: "#00e5ff",
+          color2: "#ffffff",
+          lightHex1: 0x00e5ff,
+        },
+        {
+          artist: "Unidentified",
+          trackName: "Groove",
+          fontClass: "font-bold-retro",
+          img: "download (14).jpg",
+          mCol: "#e5b981",
+          mTxt: "#222",
+          color1: "#ff8800",
+          color2: "#ff0044",
+          lightHex1: 0xff8800,
+        },
+        {
+          artist: "Drake",
+          trackName: "God's Plan",
+          fontClass: "font-bold-modern",
+          img: "drake.jpg",
+          mCol: "#f2d5d8",
+          mTxt: "#b01533",
+          color1: "#44ffaa",
+          color2: "#006644",
+          lightHex1: 0x44ffaa,
+        },
+        {
+          artist: "Tyler The Creator",
+          trackName: "See You Again",
+          fontClass: "font-quirky-decorative",
+          img: "Tyler The Creator.jpg",
+          mCol: "#4cd964",
+          mTxt: "#000",
+          color1: "#ffcc00",
+          color2: "#ff4400",
+          lightHex1: 0xffcc00,
+        },
+      ];
+
+      let currentSelectedIndex = 0;
+
+      // INTRO SEQUENCER WITH AUTO SCROLL DEMO
+      window.addEventListener("DOMContentLoaded", () => {
+        const intro = document.getElementById("intro-overlay");
+        const mainSite = document.getElementById("scrollWrapper");
+
+        setTimeout(() => {
+          intro.classList.add("state-split");
+        }, 1200);
+        setTimeout(() => {
+          intro.classList.add("state-text");
+        }, 2200);
+        setTimeout(() => {
+          intro.classList.add("state-exit");
+          mainSite.classList.add("site-ready");
+        }, 4500);
+
+        // The 2-second automatic cover movement
+        setTimeout(() => {
+          runAutoScrollDemo();
+        }, 5300);
+
+        setTimeout(() => {
+          intro.remove();
+        }, 7500);
+      });
+
+      function runAutoScrollDemo() {
+        const isMobile = window.innerWidth <= 768;
+        const startTime = performance.now();
+        const duration = 2000;
+
+        if (isMobile) {
+          const wrapper = document.getElementById("scrollWrapper");
+          function animateMobile(time) {
+            const progress = Math.min((time - startTime) / duration, 1);
+            wrapper.scrollTop = 220 * Math.sin(progress * Math.PI);
+            if (progress < 1) requestAnimationFrame(animateMobile);
+          }
+          requestAnimationFrame(animateMobile);
+        } else {
+          const originalTarget = targetScrollPos;
+          function animateDesktop(time) {
+            const progress = Math.min((time - startTime) / duration, 1);
+            targetScrollPos =
+              originalTarget + 400 * Math.sin(progress * Math.PI);
+            if (progress < 1) requestAnimationFrame(animateDesktop);
+            else targetScrollPos = originalTarget;
+          }
+          requestAnimationFrame(animateDesktop);
+        }
+      }
+
+      // POPULATE COVERFLOW
+      const rackTrackEl = document.getElementById("rackTrack");
+      let htmlContentFlow = "";
+      window.GLOBAL_TRACKS.forEach((track, i) => {
+        htmlContentFlow += `
+            <div class="flow-item" id="item-${i}" onclick="handleItemTap('${track.img}', ${i})">
+                <div class="flow-cover-wrapper">
+                    <div class="flow-cover" id="cover-${i}">
+                        <div class="cover-front face"><div class="glass-shine"></div><img src="${track.img}"></div>
+                        <div class="cover-back face"><img src="${track.img}"></div>
+                        <div class="cover-spine-left face">
+                            <img class="edge-img" src="${track.img}" style="object-position: left center;">
+                            <div class="spine-label desktop-only ${track.fontClass}">${track.artist} — ${track.trackName}</div>
+                        </div>
+                        <div class="cover-spine-right face">
+                            <img class="edge-img" src="${track.img}" style="object-position: right center;">
+                            <div class="spine-label desktop-only ${track.fontClass}">${track.artist} — ${track.trackName}</div>
+                        </div>
+                        <div class="cover-spine-top face"><img class="edge-img" src="${track.img}" style="object-position: top center;"></div>
+                        <div class="cover-spine-bottom face">
+                            <img class="edge-img desktop-only" src="${track.img}" style="object-position: bottom center;">
+                            <div class="mobile-spine mobile-only" style="background-color: ${track.mCol};">
+                                <div class="spine-lines" style="background: repeating-linear-gradient(transparent, transparent 4px, rgba(0,0,0,0.15) 4px, rgba(0,0,0,0.15) 5px);"></div>
+                                <span class="spine-text-mobile" style="color: ${track.mTxt}">${track.trackName}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mobile-info mobile-only">
+                    <div class="album-title-mob">${track.trackName}</div>
+                    <div class="album-artist-mob">${track.artist}</div>
+                    <div class="play-icon-mob">▶</div>
+                </div>
+            </div>
+        `;
+      });
+      rackTrackEl.innerHTML = htmlContentFlow;
+
+      // DESKTOP COVERFLOW LOGIC
+      const spacing = 280;
+      const maxScroll = (window.GLOBAL_TRACKS.length - 1) * spacing;
+      let targetScrollPos = maxScroll / 2;
+      let currentScrollPos = targetScrollPos;
+
+      function renderFlow() {
+        requestAnimationFrame(renderFlow);
+        if (window.innerWidth <= 768) return;
+        currentScrollPos += (targetScrollPos - currentScrollPos) * 0.1;
+        window.GLOBAL_TRACKS.forEach((_, i) => {
+          const item = document.getElementById(`item-${i}`);
+          const cover = document.getElementById(`cover-${i}`);
+          const offsetFromCenter = i * spacing - currentScrollPos;
+          let progress = Math.min(1, Math.abs(offsetFromCenter) / spacing);
+          let rotateY =
+            offsetFromCenter <= 0 ? 90 - progress * 25 : -90 + progress * 25;
+          item.style.transform = `translate(-50%, -50%) translateX(${offsetFromCenter}px)`;
+          item.style.zIndex = Math.round(1000 - Math.abs(offsetFromCenter));
+          cover.style.transform = `rotateY(${rotateY}deg)`;
+        });
+      }
+      renderFlow();
+
+      let isGalleryDragging = false,
+        startGalleryX = 0,
+        galleryDragDist = 0;
+      const scrollWrapper = document.getElementById("scrollWrapper");
+
+      window.addEventListener("wheel", (e) => {
+        if (
+          window.innerWidth <= 768 ||
+          document.getElementById("modal").classList.contains("active")
+        )
+          return;
+        targetScrollPos = Math.max(
+          0,
+          Math.min(maxScroll, targetScrollPos + e.deltaY),
+        );
+      });
+
+      scrollWrapper.addEventListener("mousedown", (e) => {
+        if (window.innerWidth <= 768) return;
+        isGalleryDragging = true;
+        startGalleryX = e.clientX;
+        galleryDragDist = 0;
+      });
+      window.addEventListener("mousemove", (e) => {
+        if (
+          !isGalleryDragging ||
+          window.innerWidth <= 768 ||
+          document.getElementById("modal").classList.contains("active")
+        )
+          return;
+        const deltaX = e.clientX - startGalleryX;
+        galleryDragDist += Math.abs(deltaX);
+        targetScrollPos = Math.max(
+          0,
+          Math.min(maxScroll, targetScrollPos - deltaX * 1.5),
+        );
+        startGalleryX = e.clientX;
+      });
+      window.addEventListener("mouseup", () => {
+        isGalleryDragging = false;
+      });
+      window.addEventListener("mouseleave", () => {
+        isGalleryDragging = false;
+      });
+
+      // 3D MODAL LOGIC & TRANSITION
+      function handleItemTap(imgSrc, index) {
+        if (galleryDragDist < 10 || window.innerWidth <= 768)
+          openModal(imgSrc, index);
+      }
+
+      const modal = document.getElementById("modal");
+      const caseRotator = document.getElementById("caseRotator");
+      const cdCase = document.getElementById("cdCase");
+      const scene3D = document.getElementById("scene3D");
+
+      function openModal(imgSrc, index) {
+        currentSelectedIndex = index;
+        cdCase.className = "vinyl-case"; // reset
+        cdCase.innerHTML = `
+            <div class="vinyl-record">
+                <div class="vinyl-label" style="background-image: url('${imgSrc}')"></div>
+                <div class="vinyl-hole"></div>
+            </div>
+            <div class="sleeve">
+                <div class="sleeve-front face"><div class="glass-shine"></div><img src="${imgSrc}"></div>
+                <div class="sleeve-back face"><img src="${imgSrc}"></div>
+                <div class="sleeve-spine-left face"><img class="edge-img" src="${imgSrc}" style="object-position: left center;"></div>
+                <div class="sleeve-spine-top face"><img class="edge-img" src="${imgSrc}" style="object-position: top center;"></div>
+                <div class="sleeve-spine-bottom face"><img class="edge-img" src="${imgSrc}" style="object-position: bottom center;"></div>
+            </div>
+        `;
+        rotX = 15;
+        rotY = -20;
+        caseRotator.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+        modal.classList.add("active");
+      }
+
+      function closeModal() {
+        modal.classList.remove("active");
+        setTimeout(() => {
+          cdCase.className = "vinyl-case";
+        }, 400);
+      }
+
+      let isModalDragging = false,
+        startX,
+        startY;
+      let rotX = 15,
+        rotY = -20,
+        modalDragDist = 0;
+
+      function startModalDrag(e) {
+        isModalDragging = true;
+        modalDragDist = 0;
+        const pos = e.touches ? e.touches[0] : e;
+        startX = pos.clientX;
+        startY = pos.clientY;
+      }
+      function moveModalDrag(e) {
+        if (!isModalDragging) return;
+        const pos = e.touches ? e.touches[0] : e;
+        const deltaX = pos.clientX - startX;
+        const deltaY = pos.clientY - startY;
+        modalDragDist += Math.abs(deltaX) + Math.abs(deltaY);
+        rotY += deltaX * 0.5;
+        rotX -= deltaY * 0.5;
+        caseRotator.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+        startX = pos.clientX;
+        startY = pos.clientY;
+      }
+      function endModalDrag() {
+        isModalDragging = false;
+      }
+
+      scene3D.addEventListener("mousedown", startModalDrag);
+      scene3D.addEventListener("touchstart", startModalDrag, { passive: true });
+      window.addEventListener("mousemove", moveModalDrag);
+      window.addEventListener("touchmove", moveModalDrag, { passive: true });
+      window.addEventListener("mouseup", endModalDrag);
+      window.addEventListener("touchend", endModalDrag);
+
+      // THE CRUCIAL TRANSITION LOGIC
+      cdCase.addEventListener("click", (e) => {
+        if (modalDragDist < 10) {
+          if (cdCase.classList.contains("is-open")) {
+            // SECOND TAP: Trigger transition to Three.js scene
+            cdCase.classList.add("fly-out");
+
+            setTimeout(() => {
+              closeModal();
+              document
+                .getElementById("scrollWrapper")
+                .classList.add("fade-out");
+
+              if (window.startTurntableEngine) {
+                window.startTurntableEngine(currentSelectedIndex);
+              }
+            }, 600);
+          } else {
+            cdCase.classList.add("is-open");
+          }
+        }
+      });
+
+      modal.addEventListener("click", (e) => {
+        if (modalDragDist < 10 && !cdCase.contains(e.target)) closeModal();
+      });
+
+      document.getElementById("btn-back").addEventListener("click", () => {
+        document
+          .getElementById("turntable-container")
+          .classList.remove("active");
+        document.getElementById("scrollWrapper").classList.remove("fade-out");
+        if (window.stopTurntable) window.stopTurntable();
+      });
+    </script>
+
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+      const TRACKS = window.GLOBAL_TRACKS;
+
+      // Audio Engine
+      const playerAudio = new Audio();
+
+      const state = {
+        isPlaying: false,
+        trackIdx: 0,
+        isCoverOpen: false,
+      };
+
+      const mount = document.getElementById("canvas-mount");
+      const getW = () => window.innerWidth;
+      const getH = () => window.innerHeight;
+
+      const isMobile = window.innerWidth < 768;
+
+      const finalDistance = isMobile ? 32.0 : 18.0;
+      const finalPolarAngle = Math.PI / 6;
+      const targetCamY = finalDistance * Math.cos(finalPolarAngle);
+      const targetCamZ = finalDistance * Math.sin(finalPolarAngle);
+
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: false,
+        powerPreference: "high-performance",
+      });
+      renderer.setSize(getW(), getH());
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      mount.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x020202);
+
+      const camera = new THREE.PerspectiveCamera(50, getW() / getH(), 0.1, 100);
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.maxPolarAngle = Math.PI;
+
+      scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+      const keyLight = new THREE.DirectionalLight(0xffffff, 2.5);
+      keyLight.position.set(2, 8, 3);
+      keyLight.castShadow = true;
+      scene.add(keyLight);
+      const fillLight = new THREE.PointLight(0xcc44ff, 4, 15);
+      fillLight.position.set(-4, 5, -2);
+      scene.add(fillLight);
+
+      const matBoard = new THREE.MeshStandardMaterial({
+        color: 0xe8e8e8,
+        roughness: 0.6,
+        metalness: 0.2,
+      });
+      const matMetal = new THREE.MeshStandardMaterial({
+        color: 0x888888,
+        roughness: 0.3,
+        metalness: 0.8,
+      });
+      const matChrome = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.1,
+        metalness: 1.0,
+      });
+      const matDark = new THREE.MeshStandardMaterial({
+        color: 0x111111,
+        roughness: 0.8,
+        metalness: 0.2,
+      });
+      const traceMat = new THREE.MeshStandardMaterial({
+        color: 0xd47028,
+        roughness: 0.2,
+        metalness: 0.95,
+      });
+      const glassMat = new THREE.MeshPhysicalMaterial({
+        color: 0xffffff,
+        metalness: 0.1,
+        roughness: 0.05,
+        transmission: 0.98,
+        thickness: 0.1,
+        transparent: true,
+        opacity: 0.25,
+        clearcoat: 1.0,
+        side: THREE.DoubleSide,
+      });
+
+      function mesh(geo, mat) {
+        const m = new THREE.Mesh(geo, mat);
+        m.castShadow = true;
+        m.receiveShadow = true;
+        return m;
+      }
+
+      const masterGroup = new THREE.Group();
+      scene.add(masterGroup);
+      masterGroup.rotation.y = THREE.MathUtils.degToRad(30);
+
+      const boardGroup = new THREE.Group();
+      masterGroup.add(boardGroup);
+      const baseGeo = new THREE.BoxGeometry(8.2, 1.2, 8.2);
+      baseGeo.translate(0, -0.49, 0);
+      boardGroup.add(mesh(baseGeo, matBoard));
+      const chassisGeo = new THREE.BoxGeometry(8.0, 0.6, 8.0);
+      chassisGeo.translate(0, -1.39, 0);
+      boardGroup.add(mesh(chassisGeo, matDark));
+      const gridHelper = new THREE.GridHelper(8.0, 32, 0xcccccc, 0xdddddd);
+      gridHelper.position.y = 0.12;
+      boardGroup.add(gridHelper);
+      const pipes = [
+        [-0.5, 5.0, 0.15, 0.15],
+        [2.0, 0.15, 0.15, 3.0],
+        [-1.5, 0.15, 0.15, 2.5],
+      ];
+      pipes.forEach(([x, w, h, d]) => {
+        const t = mesh(new THREE.BoxGeometry(w, h, d), traceMat);
+        t.position.set(x, 0.18, 0.5);
+        boardGroup.add(t);
+      });
+      boardGroup.position.y = -0.5;
+
+      const coverPivot = new THREE.Group();
+      masterGroup.add(coverPivot);
+      coverPivot.position.set(0, -0.3, -4.1);
+      const coverGroup = new THREE.Group();
+      coverPivot.add(coverGroup);
+      coverGroup.position.set(0, 0.6, 4.1);
+      const glassSlab = mesh(new THREE.BoxGeometry(8.2, 0.08, 8.2), glassMat);
+      glassSlab.castShadow = false;
+      coverGroup.add(glassSlab);
+      const rimMesh = mesh(new THREE.BoxGeometry(8.3, 0.1, 8.3), matChrome);
+      rimMesh.material.wireframe = true;
+      coverGroup.add(rimMesh);
+      let coverTargetAngle = 0;
+
+      const platGroup = new THREE.Group();
+      masterGroup.add(platGroup);
+      platGroup.position.set(1.6, -0.26, 1.5);
+      platGroup.add(
+        mesh(new THREE.CylinderGeometry(2.1, 2.1, 0.2, 64), matDark),
+      );
+
+      // Floating Vinyl Group
+      const vinylGroup = new THREE.Group();
+      platGroup.add(vinylGroup);
+      let isVinylFloating = true;
+
+      const hoverX = isMobile ? -1.5 : -3.5;
+      const hoverY = isMobile ? 4.0 : 3.0;
+      let vinylTargetPos = new THREE.Vector3(hoverX, hoverY, 0.5);
+      let vinylCurrentPos = new THREE.Vector3(hoverX, 10, 0.5);
+      vinylGroup.position.copy(vinylCurrentPos);
+
+      // Unified Canvas Texture Approach for Base Vinyl Design
+      const vinylCanvas = document.createElement("canvas");
+      vinylCanvas.width = 1024;
+      vinylCanvas.height = 1024;
+      const vctx = vinylCanvas.getContext("2d");
+      const vinylTex = new THREE.CanvasTexture(vinylCanvas);
+
+      function drawVinylCanvas(track) {
+        if (!track) return;
+        const cx = 512,
+          cy = 512;
+        vctx.clearRect(0, 0, 1024, 1024);
+
+        // Base Black Vinyl
+        vctx.fillStyle = "#050505";
+        vctx.beginPath();
+        vctx.arc(cx, cy, 500, 0, Math.PI * 2);
+        vctx.fill();
+
+        // THICK SOLID RED OUTER LINE
+        vctx.strokeStyle = "#ff0000";
+        vctx.lineWidth = 16;
+        vctx.beginPath();
+        vctx.arc(cx, cy, 490, 0, Math.PI * 2);
+        vctx.stroke();
+
+        // Detailed Grooves
+        vctx.lineWidth = 2;
+        for (let r = 470; r > 210; r -= 8) {
+          vctx.strokeStyle = r % 24 === 0 ? "#1a1a1a" : "#0a0a0a";
+          vctx.beginPath();
+          vctx.arc(cx, cy, r, 0, Math.PI * 2);
+          vctx.stroke();
+        }
+
+        // THICK RED INNER CIRCLE
+        vctx.fillStyle = "#ff0000";
+        vctx.beginPath();
+        vctx.arc(cx, cy, 210, 0, Math.PI * 2);
+        vctx.fill();
+
+        // Bold white text on the red circle so spinning is visible!
+        vctx.save();
+        vctx.translate(cx, cy);
+        vctx.fillStyle = "#ffffff";
+        vctx.font = 'bold 24px "VT323", monospace';
+        vctx.textAlign = "center";
+        vctx.textBaseline = "middle";
+        vctx.fillText("SOMI PLAYER • " + track.artist.toUpperCase(), 0, -185);
+        vctx.fillText(
+          "TRACK 0" + (state.trackIdx + 1) + " • SYSTEM ACTIVE",
+          0,
+          185,
+        );
+        vctx.restore();
+
+        // Center hole inner-most black hole
+        vctx.fillStyle = "#000";
+        vctx.beginPath();
+        vctx.arc(cx, cy, 18, 0, Math.PI * 2);
+        vctx.fill();
+
+        vinylTex.needsUpdate = true;
+      }
+
+      const vinylMat = new THREE.MeshStandardMaterial({
+        map: vinylTex,
+        roughness: 0.4,
+        metalness: 0.1,
+        color: 0xffffff,
+      });
+      const vinylMesh = mesh(
+        new THREE.CylinderGeometry(2.0, 2.0, 0.04, 128),
+        vinylMat,
+      );
+      vinylGroup.add(vinylMesh);
+
+      // Dedicated 3D Mesh purely for pulling the local DOM image securely (Bypasses black canvas bugs)
+      const labelGeo = new THREE.CircleGeometry(0.68, 64);
+      const labelMat = new THREE.MeshBasicMaterial({ color: 0xffffff }); // Basic ensures no shadow rendering bugs
+      const labelMesh = new THREE.Mesh(labelGeo, labelMat);
+      labelMesh.rotation.x = -Math.PI / 2;
+      labelMesh.position.y = 0.021;
+      vinylGroup.add(labelMesh);
+
+      // Black Hole
+      const holeMesh = mesh(
+        new THREE.CylinderGeometry(0.065, 0.065, 0.044, 32),
+        new THREE.MeshBasicMaterial({ color: 0x000000 }),
+      );
+      vinylGroup.add(holeMesh);
+
+      // Chrome Spindle
+      vinylGroup.add(
+        mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.3), matChrome),
+      ).position.y = 0.15;
+
+      const armGroup = new THREE.Group();
+      masterGroup.add(armGroup);
+      armGroup.position.set(-0.5, -0.04, -1.8);
+      armGroup.add(
+        mesh(new THREE.CylinderGeometry(0.3, 0.35, 0.4, 16), matChrome),
+      );
+      const pivotGroup = new THREE.Group();
+      pivotGroup.position.y = 0.3;
+      armGroup.add(pivotGroup);
+      const armTube = mesh(
+        new THREE.CylinderGeometry(0.04, 0.03, 3.5, 16),
+        traceMat,
+      );
+      armTube.rotation.z = Math.PI / 2;
+      armTube.position.x = 1.6;
+      pivotGroup.add(armTube);
+      const headshell = mesh(new THREE.BoxGeometry(0.3, 0.08, 0.4), matMetal);
+      headshell.position.set(3.4, 0, 0.2);
+      pivotGroup.add(headshell);
+
+      const ANGLE_REST = 0.1;
+      const ANGLE_PLAY_START = -0.4;
+      const ANGLE_PLAY_END = -0.95;
+      let armTarget = ANGLE_REST;
+      pivotGroup.rotation.y = armTarget;
+
+      const monGroup = new THREE.Group();
+      masterGroup.add(monGroup);
+      monGroup.position.set(-2.0, 0.0, 1.8);
+      monGroup.rotation.x = -Math.PI / 2;
+      monGroup.add(mesh(new THREE.BoxGeometry(2.4, 1.6, 0.15), matDark));
+      const screenCanvas = document.createElement("canvas");
+      screenCanvas.width = 512;
+      screenCanvas.height = 256;
+      const sctx = screenCanvas.getContext("2d");
+      const screenTex = new THREE.CanvasTexture(screenCanvas);
+      const screenMesh = mesh(
+        new THREE.PlaneGeometry(2.2, 1.4),
+        new THREE.MeshStandardMaterial({
+          map: screenTex,
+          emissive: 0x111111,
+          emissiveIntensity: 1,
+        }),
+      );
+      screenMesh.position.z = 0.08;
+      monGroup.add(screenMesh);
+
+      function drawScreen(time, track) {
+        if (!track) return;
+        const W = 512,
+          H = 256;
+        sctx.fillStyle = "#050505";
+        sctx.fillRect(0, 0, W, H);
+        if (!state.isCoverOpen) {
+          sctx.font = '40px "VT323", monospace';
+          sctx.fillStyle = "#ff0000";
+          sctx.textAlign = "center";
+          if (Math.floor(time * 2) % 2 === 0)
+            sctx.fillText("SYSTEM LOCKED", W / 2, H / 2 + 15);
+          return;
+        }
+        sctx.strokeStyle = "rgba(200,200,255,0.1)";
+        sctx.lineWidth = 1;
+        for (let x = 0; x < W; x += 20) {
+          sctx.beginPath();
+          sctx.moveTo(x, 0);
+          sctx.lineTo(x, H);
+          sctx.stroke();
+        }
+        for (let y = 0; y < H; y += 20) {
+          sctx.beginPath();
+          sctx.moveTo(0, y);
+          sctx.lineTo(W, y);
+          sctx.stroke();
+        }
+        sctx.strokeStyle = track.color1;
+        sctx.lineWidth = 2;
+        sctx.shadowBlur = 10;
+        sctx.shadowColor = track.color1;
+        sctx.beginPath();
+        for (let x = 0; x < W; x += 2) {
+          const y = state.isPlaying
+            ? H * 0.5 +
+              Math.sin(x * 0.05 + time * 5) * 40 * Math.sin(time * 2 + x * 0.01)
+            : H * 0.5 + Math.sin(x * 0.05) * 5;
+          x === 0 ? sctx.moveTo(x, y) : sctx.lineTo(x, y);
+        }
+        sctx.stroke();
+        sctx.shadowBlur = 0;
+        sctx.font = '28px "VT323", monospace';
+        sctx.fillStyle = "#ffffff";
+        sctx.textAlign = "left";
+        sctx.fillText(
+          state.isPlaying
+            ? "SYSTEM ACTIVE"
+            : isVinylFloating
+              ? "WAITING FOR DISC..."
+              : "SYSTEM READY",
+          12,
+          28,
+        );
+        sctx.fillText(
+          `FREQ: ${Math.floor(Math.abs(Math.sin(time) * 1000))} HZ`,
+          12,
+          H - 18,
+        );
+      }
+
+      const orbGroup = new THREE.Group();
+      masterGroup.add(orbGroup);
+      orbGroup.position.set(-2.0, 0.4, -2.0);
+      const orbMat = new THREE.ShaderMaterial({
+        vertexShader: `varying vec3 vNormal; varying vec3 vPos; uniform float uTime; void main(){ vNormal = normalize(normalMatrix * normal); vPos = position; vec3 p = position; float d = sin(p.x*6.0+uTime*1.5)*0.03 + sin(p.y*5.0+uTime)*0.03; gl_Position = projectionMatrix * modelViewMatrix * vec4(p + normal*d, 1.0); }`,
+        fragmentShader: `varying vec3 vNormal; varying vec3 vPos; uniform float uTime; uniform vec3 uColor1; uniform vec3 uColor2; void main(){ float intensity = pow(1.0 - dot(vNormal, vec3(0,0,1.0)), 1.5); vec3 col = mix(uColor1, uColor2, sin(vPos.y*8.0 + uTime*2.0)*0.5+0.5); gl_FragColor = vec4(col * intensity * 2.5, 0.95); }`,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        uniforms: {
+          uTime: { value: 0 },
+          uColor1: { value: new THREE.Color(0xcc44ff) },
+          uColor2: { value: new THREE.Color(0xffffff) },
+        },
+      });
+      orbGroup.add(
+        new THREE.Mesh(new THREE.SphereGeometry(0.8, 64, 64), orbMat),
+      );
+      orbGroup.add(new THREE.PointLight(0xcc44ff, 4, 6));
+
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+      const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.2);
+      let isDraggingArm = false;
+
+      function updatePointer(e) {
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        pointer.x = (cx / window.innerWidth) * 2 - 1;
+        pointer.y = -(cy / window.innerHeight) * 2 + 1;
+      }
+
+      // AUDIO PLAYBACK LOGIC & TIMELINE SYNC
+      function formatTime(sec) {
+        if (isNaN(sec)) return "0:00";
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60)
+          .toString()
+          .padStart(2, "0");
+        return `${m}:${s}`;
+      }
+
+      playerAudio.addEventListener("timeupdate", () => {
+        if (!playerAudio.duration) return;
+        const curr = playerAudio.currentTime;
+        const dur = playerAudio.duration;
+        document.getElementById("time-current").textContent = formatTime(curr);
+
+        const perc = (curr / dur) * 100;
+        const slider = document.getElementById("progress-slider");
+        slider.value = perc;
+        slider.style.background = `linear-gradient(to right, #fff ${perc}%, rgba(255,255,255,0.2) ${perc}%)`;
+      });
+
+      playerAudio.addEventListener("loadedmetadata", () => {
+        document.getElementById("time-total").textContent = formatTime(
+          playerAudio.duration,
+        );
+      });
+
+      document
+        .getElementById("progress-slider")
+        .addEventListener("input", (e) => {
+          const perc = e.target.value;
+          if (playerAudio.duration) {
+            playerAudio.currentTime = (perc / 100) * playerAudio.duration;
+          }
+          e.target.style.background = `linear-gradient(to right, #fff ${perc}%, rgba(255,255,255,0.2) ${perc}%)`;
+        });
+
+      function setPlayState(active) {
+        if (!state.isCoverOpen || isVinylFloating) return;
+        state.isPlaying = active;
+
+        const iconPlay = document.getElementById("icon-play");
+        const iconPause = document.getElementById("icon-pause");
+
+        if (state.isPlaying) {
+          iconPlay.style.display = "none";
+          iconPause.style.display = "block";
+          playerAudio
+            .play()
+            .catch((e) => console.log("Audio requires interaction", e));
+        } else {
+          iconPlay.style.display = "block";
+          iconPause.style.display = "none";
+          playerAudio.pause();
+        }
+      }
+
+      window.addEventListener("pointermove", (e) => {
+        if (
+          !document
+            .getElementById("turntable-container")
+            .classList.contains("active")
+        )
+          return;
+        updatePointer(e);
+        if (!state.isCoverOpen) {
+          document.body.style.cursor = "pointer";
+          return;
+        }
+
+        if (isDraggingArm) {
+          document.body.classList.add("grabbing-cursor");
+          raycaster.setFromCamera(pointer, camera);
+          const intersectPt = new THREE.Vector3();
+          if (raycaster.ray.intersectPlane(dragPlane, intersectPt)) {
+            const localPt = armGroup.worldToLocal(intersectPt.clone());
+            let angle = -Math.atan2(localPt.z, localPt.x);
+            angle = Math.max(ANGLE_PLAY_END, Math.min(ANGLE_REST, angle));
+            armTarget = angle;
+            pivotGroup.rotation.y = angle;
+            if (angle < ANGLE_PLAY_START && !state.isPlaying)
+              setPlayState(true);
+            else if (angle > ANGLE_PLAY_START && state.isPlaying)
+              setPlayState(false);
+          }
+        } else {
+          raycaster.setFromCamera(pointer, camera);
+          if (raycaster.intersectObject(glassSlab).length > 0) {
+            document.body.style.cursor = "pointer";
+            document.body.classList.remove("grab-cursor");
+            return;
+          }
+          if (
+            raycaster.intersectObjects([armTube, headshell]).length > 0 &&
+            !isVinylFloating
+          ) {
+            document.body.classList.add("grab-cursor");
+            document.body.style.cursor = "auto";
+          } else {
+            document.body.classList.remove("grab-cursor");
+            document.body.classList.remove("grabbing-cursor");
+            document.body.style.cursor = "default";
+          }
+        }
+      });
+
+      renderer.domElement.addEventListener("pointerdown", (e) => {
+        if (
+          !document
+            .getElementById("turntable-container")
+            .classList.contains("active")
+        )
+          return;
+        updatePointer(e);
+
+        if (!state.isCoverOpen) {
+          state.isCoverOpen = true;
+          coverTargetAngle = -Math.PI * 0.45;
+          document.getElementById("hud").classList.add("unlocked");
+          document.getElementById("canvas-mount").style.cursor = "default";
+
+          setTimeout(() => {
+            isVinylFloating = false;
+          }, 400);
+          return;
+        }
+
+        raycaster.setFromCamera(pointer, camera);
+        if (raycaster.intersectObject(glassSlab).length > 0) {
+          state.isCoverOpen = false;
+          coverTargetAngle = 0;
+          document.getElementById("hud").classList.remove("unlocked");
+          isVinylFloating = true;
+          vinylTargetPos.set(hoverX, hoverY, 0.5);
+          setPlayState(false);
+          armTarget = ANGLE_REST;
+          return;
+        }
+
+        if (
+          raycaster.intersectObjects([armTube, headshell]).length > 0 &&
+          !isVinylFloating
+        ) {
+          isDraggingArm = true;
+          controls.enabled = false;
+        }
+      });
+
+      window.addEventListener("pointerup", () => {
+        if (isDraggingArm) {
+          isDraggingArm = false;
+          controls.enabled = true;
+          if (pivotGroup.rotation.y > ANGLE_PLAY_START) {
+            setPlayState(false);
+            armTarget = ANGLE_REST;
+          }
+        }
+      });
+
+      document.getElementById("btn-play").addEventListener("click", () => {
+        if (isVinylFloating) return;
+        setPlayState(!state.isPlaying);
+        armTarget = state.isPlaying ? ANGLE_PLAY_START - 0.1 : ANGLE_REST;
+      });
+
+      let introProgress = 2;
+      const INTRO_DURATION = 2.5;
+      const finalFov = 50;
+      const startFov = 15;
+      const baseHeight =
+        finalDistance * Math.tan(THREE.MathUtils.degToRad(finalFov / 2));
+      const startPolarAngle = 0.01;
+
+      camera.fov = finalFov;
+      camera.position.set(0, targetCamY, targetCamZ);
+      camera.lookAt(0, 0, 0);
+      camera.updateProjectionMatrix();
+
+      const clock = new THREE.Clock();
+      let prevTime = 0;
+      let screenFrameAcc = 0;
+      let levitateTime = 0;
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const t = clock.getElapsedTime();
+        const delta = t - prevTime;
+        prevTime = t;
+
+        if (introProgress < 1) {
+          introProgress = Math.min(introProgress + delta / INTRO_DURATION, 1);
+          const ease = 1 - Math.pow(1 - introProgress, 4);
+          camera.fov = startFov + ease * (finalFov - startFov);
+          const currentPolar =
+            startPolarAngle + ease * (finalPolarAngle - startPolarAngle);
+          const currentDist =
+            baseHeight / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+          const curY = currentDist * Math.cos(currentPolar);
+          const curZ = currentDist * Math.sin(currentPolar);
+          camera.position.set(0, curY, curZ);
+          camera.updateProjectionMatrix();
+          camera.lookAt(0, 0, 0);
+        } else if (introProgress === 1) {
+          camera.fov = finalFov;
+          camera.position.set(0, targetCamY, targetCamZ);
+          camera.updateProjectionMatrix();
+          camera.lookAt(0, 0, 0);
+          introProgress = 2;
+        }
+
+        if (isVinylFloating) {
+          levitateTime += delta;
+          vinylCurrentPos.x += (vinylTargetPos.x - vinylCurrentPos.x) * 0.05;
+          vinylCurrentPos.z += (vinylTargetPos.z - vinylCurrentPos.z) * 0.05;
+          let targetY = vinylTargetPos.y + Math.sin(levitateTime * 2) * 0.2;
+          vinylCurrentPos.y += (targetY - vinylCurrentPos.y) * 0.05;
+
+          vinylGroup.rotation.x = 0;
+          vinylGroup.rotation.z = 0;
+          vinylGroup.rotation.y += 0.005;
+
+          vinylGroup.position.copy(vinylCurrentPos);
+        } else {
+          vinylCurrentPos.lerp(new THREE.Vector3(0, 0.12, 0), 0.08);
+          vinylGroup.position.copy(vinylCurrentPos);
+          if (state.isPlaying) vinylGroup.rotation.y += 0.025;
+        }
+
+        coverPivot.rotation.x +=
+          (coverTargetAngle - coverPivot.rotation.x) * 0.08;
+        if (!isDraggingArm)
+          pivotGroup.rotation.y += (armTarget - pivotGroup.rotation.y) * 0.08;
+        orbMat.uniforms.uTime.value = t;
+        orbGroup.rotation.y = t * 0.2;
+
+        screenFrameAcc += delta;
+        if (screenFrameAcc > 1 / 30) {
+          drawScreen(t, TRACKS[state.trackIdx]);
+          screenTex.needsUpdate = true;
+          screenFrameAcc = 0;
+        }
+        controls.update();
+        renderer.render(scene, camera);
+      }
+
+      document.fonts.ready.then(() => {
+        drawScreen(0, TRACKS[0]);
+        animate();
+      });
+
+      function applyTrack() {
+        const t = TRACKS[state.trackIdx];
+
+        // Update HUD Cover Image dynamically!
+        document.getElementById("hud-cover").src = t.img;
+
+        // Dynamic Audio setup: 1.mp3, 2.mp3, 3.mp3 etc...
+        playerAudio.src = `${state.trackIdx + 1}.mp3`;
+
+        // Reset progress slider
+        document.getElementById("progress-slider").value = 0;
+        document.getElementById("progress-slider").style.background =
+          `rgba(255,255,255,0.2)`;
+        document.getElementById("time-current").textContent = "0:00";
+        document.getElementById("time-total").textContent = "0:00";
+
+        drawVinylCanvas(t);
+
+        // Grab image element and apply directly to the 3D Label Mesh to guarantee loading!
+        const imgEl = document.querySelector(
+          `#cover-${state.trackIdx} .cover-front img`,
+        );
+        if (imgEl && imgEl.complete) {
+          const tex = new THREE.Texture(imgEl);
+          tex.colorSpace = THREE.SRGBColorSpace;
+          tex.needsUpdate = true;
+          labelMesh.material.map = tex;
+          labelMesh.material.needsUpdate = true;
+        }
+
+        fillLight.color.setHex(t.lightHex1);
+        orbMat.uniforms.uColor1.value.set(t.color1);
+        if (!isDraggingArm) armTarget = ANGLE_REST;
+        setTimeout(() => {
+          if (!isDraggingArm)
+            armTarget =
+              state.isPlaying && !isVinylFloating
+                ? ANGLE_PLAY_START - 0.1
+                : ANGLE_REST;
+        }, 500);
+      }
+
+      window.startTurntableEngine = function (index) {
+        state.trackIdx = index;
+        document.getElementById("turntable-container").classList.add("active");
+
+        state.isCoverOpen = false;
+        coverTargetAngle = 0;
+        document.getElementById("hud").classList.remove("unlocked");
+
+        isVinylFloating = true;
+        vinylCurrentPos.set(hoverX, 10, 0.5);
+        vinylTargetPos.set(hoverX, hoverY, 0.5);
+        setPlayState(false);
+        armTarget = ANGLE_REST;
+
+        const initDist =
+          baseHeight / Math.tan(THREE.MathUtils.degToRad(startFov / 2));
+        camera.fov = startFov;
+        camera.position.set(
+          0,
+          initDist * Math.cos(startPolarAngle),
+          initDist * Math.sin(startPolarAngle),
+        );
+        camera.updateProjectionMatrix();
+        introProgress = 0;
+
+        applyTrack();
+      };
+
+      window.stopTurntable = function () {
+        setPlayState(false);
+        armTarget = ANGLE_REST;
+      };
+
+      document.getElementById("btn-next").addEventListener("click", () => {
+        state.trackIdx = (state.trackIdx + 1) % TRACKS.length;
+        applyTrack();
+      });
+      document.getElementById("btn-prev").addEventListener("click", () => {
+        state.trackIdx = (state.trackIdx + TRACKS.length - 1) % TRACKS.length;
+        applyTrack();
+      });
+
+      window.addEventListener("resize", () => {
+        camera.aspect = getW() / getH();
+        camera.updateProjectionMatrix();
+        renderer.setSize(getW(), getH());
+      });
+    </script>
+  </body>
+</html>
